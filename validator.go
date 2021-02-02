@@ -43,9 +43,11 @@ func BuildConfiguration() ValidationConfig {
 
 func ExtractTokenFromAuthHeader(r *http.Request) (string, error) {
 	authHeader := r.Header.Get("Authorization")
-	log.Printf(authHeader)
+	xRequestId := r.Header.Get("X-Parent-Request-Id")
+
+	log.Printf("[%s] Authorization header is: %s", xRequestId, authHeader)
 	if authHeader == "" {
-		log.Printf("Error: Required authorization token not found")
+		log.Printf("[%s] Error: Required authorization token not found", xRequestId)
 		return "", errors.New("Authorization header format must be Bearer {token}")
 	}
 
@@ -72,6 +74,13 @@ type ValidationType = func(responseWriter http.ResponseWriter, request *http.Req
 
 func Validate(jwks *jwk.Set, configuration ValidationConfig)  ValidationType {
 	var handler = func(responseWriter http.ResponseWriter, request *http.Request) {
+		xRequestId := request.Header.Get("X-Parent-Request-Id")
+
+		if request.Method == http.MethodOptions {
+			log.Printf("[%s] Method OPTIONS is authorized directly", xRequestId)
+			makeJsonResponse(responseWriter, http.StatusOK, "OK")
+			return
+		}
 
 		// Token extraction with error management
 		token, err := ExtractTokenFromAuthHeader(request)
@@ -87,7 +96,7 @@ func Validate(jwks *jwk.Set, configuration ValidationConfig)  ValidationType {
 			return
 		}
 		jsonParsedToken, _ := json.Marshal(parsedToken)
-		log.Printf("Decoded token extracted: %s", jsonParsedToken)
+		log.Printf("[%s] Decoded token extracted: %s", xRequestId, jsonParsedToken)
 
 		err = jwt.Validate(
 			parsedToken,
