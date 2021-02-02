@@ -74,7 +74,7 @@ type ValidationType = func(responseWriter http.ResponseWriter, request *http.Req
 
 func Validate(jwks *jwk.Set, configuration ValidationConfig)  ValidationType {
 	var handler = func(responseWriter http.ResponseWriter, request *http.Request) {
-		xRequestId := r.Header.Get("X-Parent-Request-Id")
+		xRequestId := request.Header.Get("X-Parent-Request-Id")
 
 		if request.Method == http.MethodOptions {
 			log.Printf("[%s] Method OPTIONS is authorized directly", xRequestId)
