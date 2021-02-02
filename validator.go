@@ -75,6 +75,12 @@ type ValidationType = func(responseWriter http.ResponseWriter, request *http.Req
 func Validate(jwks *jwk.Set, configuration ValidationConfig)  ValidationType {
 	var handler = func(responseWriter http.ResponseWriter, request *http.Request) {
 		xRequestId := request.Header.Get("X-Parent-Request-Id")
+		for name, values := range request.Header {
+			// Loop over all values for the name.
+			for _, value := range values {
+				fmt.Println(name, value)
+			}
+		}
 		log.Printf("[%s] %s %s from %s", xRequestId, request.Method, request.URL.Path, request.URL.Host)
 
 		if request.Method == http.MethodOptions {
