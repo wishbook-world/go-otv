@@ -75,15 +75,24 @@ type ValidationType = func(responseWriter http.ResponseWriter, request *http.Req
 func Validate(jwks *jwk.Set, configuration ValidationConfig)  ValidationType {
 	var handler = func(responseWriter http.ResponseWriter, request *http.Request) {
 		xRequestId := request.Header.Get("X-Parent-Request-Id")
-		for name, values := range request.Header {
-			// Loop over all values for the name.
-			for _, value := range values {
-				fmt.Println(name, value)
-			}
-		}
-		log.Printf("[%s] %s %s from %s", xRequestId, request.Method, request.URL.Path, request.URL.Host)
+		// for name, values := range request.Header {
+		// 	for _, value := range values {
+		// 		fmt.Println(name, value)
+		// 	}
+		// }
+		originalMethod := request.Header.Get("X-Original-Method")
+		log.Printf(
+			"[%s] %s %s for %s %s -- %s on %s",
+			xRequestId,
+			request.Method,
+			request.URL.Path,
+			originalMethod,
+			request.Header.Get("X-Original-Url"),
+			request.Header.Get("X-Forwarded-For"),
+			request.Header.Get("User-Agent"),
+		)
 
-		if request.Method == http.MethodOptions {
+		if originalMethod == http.MethodOptions {
 			log.Printf("[%s] Method OPTIONS is authorized directly", xRequestId)
 			makeJsonResponse(responseWriter, http.StatusOK, "OK")
 			return
